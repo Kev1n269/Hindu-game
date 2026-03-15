@@ -1,0 +1,16 @@
+(A) O mapa ->Lorenzo
+(A) Estruturas iniciais -> Lorenzo
+(A) Aprender Phaser 3 -> Kevin
+(A) fazer o mapa aperecer na tela e o usuário ser capaz de mexer ->Kevin
+(A) UI básica (o jogador consegue ver os recursos que tem) -> Cecília
+(A) sistema de coleta de recursos -> Kevin
+(A) sistema de criação de novos workers -> Kevin e Cecília
+(B) estruturas mais complexas 
+(B) recursos mais avançados
+(B) Ter suporte para +2 jogadores 
+(B) sistema de construção
+(C) sistema de devoção (templos, bençãos e eventos aleatórios)
+(C) sistema de guerra 
+(C) sistema de era (a partir de recursos, evoluir e ganhar bufs/novas estruturas)
+(C) sistema de pontuação 
+(D) Melhorias de balanceamento (recursos para atacar outros jogadores, por exemplo)

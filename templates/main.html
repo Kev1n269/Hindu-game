@@ -1,5 +1,17 @@
-{%extends layout.html%}
+{%extends "layout.html"%}
+
+{%block head_extra%}
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+{%endblock%}
 
 {%block content%}
+<div id="app">
+    <!-- para adicionar a um componente: 
+     <h1>Jogo da 1ªI3</h1>
+    <button class="text-black" @click="iniciarJogo()">Jogar</button>
+    <button id="expedicao">Expedição</button>
 
+    -->
+
+</div>
 {%endblock%}

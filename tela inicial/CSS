@@ -1,0 +1,46 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(135deg, #f5f5dc, #f0e6d2, #faf9f6);
+}
+
+.container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  color: #5a3e1b;
+}
+
+#jogar {
+  background-color: #ff9933;
+  color: white;
+  font-size: 22px;
+  padding: 15px 40px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#jogar:hover {
+  background-color: #e68a00;
+  transform: scale(1.08);
+}
+
+#jogar:active {
+  transform: scale(0.95);
+}
+

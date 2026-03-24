@@ -19,6 +19,26 @@ document.getElementById("expedicao").addEventListener("click", function() {
     }
 });
 
+//exemplo de componente
+/*app.component('menu-de-recursos', {
+  props: {
+    madeira: {
+      type: Int, 
+      required: true 
+    }, 
+    pedra: {
+      type: Int, 
+      required: true 
+    }
+  }, 
+  setup(props){
+   const resource_sum=computed(()=>props.madeira+props.pedra);   
+   return {resource_sum}
+  }, 
+  template: `
+   <p> ((madeira)) + ((pedra)) = ((resource_sum)) </p> 
+  ` 
+});*/
 
 app.config.compilerOptions.delimiters = ['((', '))'];
 app.mount('#app'); 

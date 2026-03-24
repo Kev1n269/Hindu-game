@@ -1,11 +1,14 @@
 export default class Game extends Phaser.Scene {
     constructor() {
-        super('Game')
+        super('Game');
     }
 
     preload() {
-        this.load.tilemapTiledJSON('mapa', 'static/assets/map_assets/map.json')
-        this.load.image('tileset1', 'static/assets/map_assets/tileset1.png') 
+        this.load.tilemapTiledJSON('map', 'static/assets/map_assets/map.json');
+        this.load.image('tileset1', 'static/assets/map_assets/tileset1.png');
+        this.load.image('water', 'static/assets/map_assets/water.png');
+        this.load.image('treeset', 'static/assets/map_assets/treeset.png');
+        this.load.image('grassset', 'static/assets/map_assets/grassset.png'); 
 
         // assets do jogo — adiciona conforme os designers entregarem
         // this.load.image('mandir',   'static/assets/buildings/mandir.png')
@@ -14,85 +17,86 @@ export default class Game extends Phaser.Scene {
     }
 
     create(data) {
-        this.playerId = data?.playerId ?? 0
+    this.playerId = data?.playerId ?? 0;
 
-        // --- mapa ---
-        this.map = this.make.tilemap({ key: 'mapa' })
-        const tiles = this.map.addTilesetImage('tileset1', 'tileset1')
-        // nomes das layers têm que bater com o que está no Tiled
-        this.map.createLayer('floor', tiles, 0, 0)
-        // this.map.createLayer('decoracao', tiles, 0, 0)  // adiciona se tiver
+    this.map = this.make.tilemap({ key: 'map' });
+    const tilesetWater = this.map.addTilesetImage('water', 'water');
+    const treeset = this.map.addTilesetImage('treeset', 'treeset');
+    const grassset = this.map.addTilesetImage('grassset', 'grassset');
+    this.floorLayer=this.map.createLayer('floor', [tilesetWater,grassset],  0, 0);
+    this.decorationLayer=this.map.createLayer('decoration', treeset, 0, 0);    
+    this.floorLayer.setDepth(0);
+    this.decorationLayer.setDepth(1);
+    this.decorationLayer.setCollisionByExclusion([-1]); 
+    this.floorLayer.setPipeline('Graphics');
+    this.decorationLayer.setAlpha(0.6);
 
-        // --- câmera ---
-        this.cameras.main.setBounds(
-            0, 0,
-            this.map.widthInPixels,
-            this.map.heightInPixels
+    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels)
+
+    this.buildingSprites  = {}
+    this.selectedBuilding = null
+    this.isDragging       = false
+    this.dragThreshold = this.sys.game.device.input.touch ? 20 : 10
+
+    this.input.on('pointerup', (pointer) => {
+    const wasDragging = this.isDragging
+    this.isDragging = false
+
+    if (wasDragging) return 
+    if (!this.selectedBuilding) return
+    if (this._lastButtonDown === 2) return  // ✅ botão direito correto
+
+    const tx = this.map.worldToTileX(pointer.worldX)
+    const ty = this.map.worldToTileY(pointer.worldY)
+    console.log(`construir ${this.selectedBuilding} em tile ${tx},${ty}`)
+    })
+
+    this.input.on('wheel', (pointer, objects, deltaX, deltaY) => {
+        this.cameras.main.zoom = Phaser.Math.Clamp(
+            this.cameras.main.zoom - deltaY * 0.001, 0.5, 1.5
         )
+    })
 
-        // --- estado local (vai ser preenchido pelo servidor) ---
-        this.buildingSprites  = {}   // id → sprite
-        this.selectedBuilding = null
-        this.isDragging       = false
-        this.dragThreshold    = 10
+this.input.on('pointermove', (pointer) => {
+    // --- pinch zoom (dois dedos) ---
+    const pointers = this.input.manager.pointers.filter(
+        p => p.isDown && p.wasTouch
+    )
+    if (pointers.length === 2) {
+        const [p1, p2] = pointers
+        const curDist  = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
+        const prevDist = Phaser.Math.Distance.Between(
+            p1.prevPosition.x, p1.prevPosition.y,
+            p2.prevPosition.x, p2.prevPosition.y
+        )
+        if (prevDist > 0) {
+            const zoom = this.cameras.main.zoom * (curDist / prevDist)
+            this.cameras.main.zoom = Phaser.Math.Clamp(zoom, 0.5, 1.5)
+        }
+        return  // pinch ativo — ignora drag
+    }
 
-        // --- input: arrastar câmera (funciona no iPad e desktop) ---
-        this.input.on('pointermove', (pointer) => {
-            if (!pointer.isDown) return
+    // --- drag da câmera (um dedo ou mouse) ---
+    if (!pointer.isDown) return
+    const dist = Phaser.Math.Distance.Between(
+        pointer.downX, pointer.downY, pointer.x, pointer.y
+    )
+    if (dist > this.dragThreshold) {
+        this.isDragging = true
+        this.cameras.main.scrollX -= (pointer.x - pointer.prevPosition.x)
+        this.cameras.main.scrollY -= (pointer.y - pointer.prevPosition.y)
+    }
+})
+    this._onSelectBuild = (e) => { this.selectedBuilding = e.detail.tipo }
+    this._onCancelBuild = ()  => { this.selectedBuilding = null }
+    window.addEventListener('game:select-build',  this._onSelectBuild)
+    window.addEventListener('game:cancel-build',  this._onCancelBuild)
 
-            const dist = Phaser.Math.Distance.Between(
-                pointer.downX, pointer.downY,
-                pointer.x,    pointer.y
-            )
+        this.events.on('shutdown', () => {
+        window.removeEventListener('game:select-build',  this._onSelectBuild)
+        window.removeEventListener('game:cancel-build',  this._onCancelBuild)
+    })
 
-            if (dist > this.dragThreshold) {
-                this.isDragging = true
-                this.cameras.main.scrollX -= pointer.velocity.x * 0.5
-                this.cameras.main.scrollY -= pointer.velocity.y * 0.5
-            }
-        })
-
-        this.input.on('pointerup', () => {
-            this.isDragging = false
-        })
-
-        // --- input: clique no mapa (construção) ---
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.rightButtonDown()) return  // ignora botão direito
-
-            // espera o pointerup para confirmar que não foi drag
-        })
-
-        this.input.on('pointerup', (pointer) => {
-            if (this.isDragging) return
-            if (!this.selectedBuilding) return
-
-            const tx = this.map.worldToTileX(pointer.worldX)
-            const ty = this.map.worldToTileY(pointer.worldY)
-
-            // TODO: socket.emit('build', { room, playerId, building: this.selectedBuilding, tx, ty })
-            console.log(`construir ${this.selectedBuilding} em tile ${tx},${ty}`)
-        })
-
-        // --- zoom (scroll do mouse / pinça no iPad) --- 
-        this.input.on('wheel', (pointer, objects, deltaX, deltaY) => {
-            const zoom = this.cameras.main.zoom
-            this.cameras.main.zoom = Phaser.Math.Clamp(
-                zoom - deltaY * 0.001,
-                0.5,
-                1.5
-            )
-        })
-
-        // --- escuta eventos do Vue (seleção de construção no HUD) ---
-        window.addEventListener('select-build', (e) => {
-            this.selectedBuilding = e.detail.tipo
-            console.log('construção selecionada:', this.selectedBuilding)
-        })
-
-        window.addEventListener('cancel-build', () => {
-            this.selectedBuilding = null
-        })
     }
 
     // --- métodos auxiliares ---
@@ -104,7 +108,9 @@ export default class Game extends Phaser.Scene {
         const worldY = this.map.tileToWorldY(b.ty) + this.map.tileHeight / 2
 
         const sprite = this.add.image(worldX, worldY, b.type)
-            .setInteractive()
+            sprite.setInteractive()
+            
+        sprite.setDepth(2);
 
         // tint para identificar dono
         if (b.owner !== this.playerId) {
@@ -112,11 +118,11 @@ export default class Game extends Phaser.Scene {
         }
 
         sprite.on('pointerdown', () => {
-            if (this.isDragging) return
-
-            window.dispatchEvent(new CustomEvent('build-selected', {
-                detail: { id: b.id, tipo: b.type, owner: b.owner }
-            }))
+            this._lastButtonDown = pointer.button
+    if (this.isDragging) return
+    window.dispatchEvent(new CustomEvent('game:build-selected', {
+        detail: { id: b.id, tipo: b.type, owner: b.owner }
+    }))
         })
 
         this.buildingSprites[b.id] = sprite
@@ -127,18 +133,18 @@ export default class Game extends Phaser.Scene {
     }
 
     update() {
-        // scroll pela borda — funciona só no desktop
-        // no iPad o arrastar já cuida disso
-        const cam   = this.cameras.main
-        const mouse = this.input.mousePointer
-        const w     = this.scale.width
-        const h     = this.scale.height
-        const margin = w * 0.04
-        const speed  = 6
+    if (this.sys.game.device.input.touch) return
 
-        if (mouse.x < margin)      cam.scrollX -= speed
-        if (mouse.x > w - margin)  cam.scrollX += speed
-        if (mouse.y < margin)      cam.scrollY -= speed
-        if (mouse.y > h - margin)  cam.scrollY += speed
+    const cam    = this.cameras.main
+    const mouse  = this.input.mousePointer
+    const w      = this.scale.width
+    const h      = this.scale.height
+    const margin = w * 0.04
+    const speed  = 6
+
+    if (mouse.x < margin)     cam.scrollX -= speed
+    if (mouse.x > w - margin) cam.scrollX += speed
+    if (mouse.y < margin)     cam.scrollY -= speed
+    if (mouse.y > h - margin) cam.scrollY += speed
     }
 }

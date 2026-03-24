@@ -1,0 +1,46 @@
+
+body {
+  text-align: center;
+  color: white;
+  background-image: url("https://g.co/gemini/share/4db85acb3eea" );
+  background-size: cover;
+  background-position: center;
+}
+
+
+#expedicao {
+
+  background-color: #D4AF37;
+
+  color: white;
+
+  font-size: 20px;
+
+  padding: 15px 30px;
+
+  border: 5px;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  transition: 0.2;
+
+}
+
+
+
+#expedicao:hover {
+
+  background-color: #B8860B;
+
+  transform: scale(1.05);
+}
+
+
+
+#expedicao:active {
+
+  transform: scale(0.95);
+
+}

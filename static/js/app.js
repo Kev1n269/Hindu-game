@@ -10,9 +10,10 @@ const app = createApp({
 }
 onMounted(()=>{
 
-document.getElementById("expedicao").addEventListener("click", function() {
+/*document.getElementById("expedicao").addEventListener("click", function() {
   alert("Você iniciou uma expedição!!!");
-});
+});*/
+
 });
 
         return {iniciarJogo}

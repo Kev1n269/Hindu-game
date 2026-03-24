@@ -27,16 +27,17 @@ export default class Game extends Phaser.Scene {
     this.decorationLayer=this.map.createLayer('decoration', treeset, 0, 0);    
     this.floorLayer.setDepth(0);
     this.decorationLayer.setDepth(1);
-    this.decorationLayer.setCollisionByExclusion([-1]); 
-    this.floorLayer.setPipeline('Graphics');
-    this.decorationLayer.setAlpha(0.6);
-
-    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels)
+    this.decorationLayer.setCollisionByExclusion([-1]);
 
     this.buildingSprites  = {}
     this.selectedBuilding = null
     this.isDragging       = false
     this.dragThreshold = this.sys.game.device.input.touch ? 20 : 10
+    const minZoomX=this.scale.width  / this.map.widthInPixels;; 
+    const minZoomY = this.scale.height / this.map.heightInPixels;
+    this.minZoom=Math.max(minZoomX, minZoomY);
+    this.cameras.main.zoom = this.minZoom;
+    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels); 
 
     this.input.on('pointerup', (pointer) => {
     const wasDragging = this.isDragging
@@ -44,7 +45,7 @@ export default class Game extends Phaser.Scene {
 
     if (wasDragging) return 
     if (!this.selectedBuilding) return
-    if (this._lastButtonDown === 2) return  // ✅ botão direito correto
+    if (this._lastButtonDown === 2) return 
 
     const tx = this.map.worldToTileX(pointer.worldX)
     const ty = this.map.worldToTileY(pointer.worldY)
@@ -53,7 +54,7 @@ export default class Game extends Phaser.Scene {
 
     this.input.on('wheel', (pointer, objects, deltaX, deltaY) => {
         this.cameras.main.zoom = Phaser.Math.Clamp(
-            this.cameras.main.zoom - deltaY * 0.001, 0.5, 1.5
+            this.cameras.main.zoom - deltaY * 0.002 , this.minZoom, 1.5
         )
     })
 
@@ -71,7 +72,7 @@ this.input.on('pointermove', (pointer) => {
         )
         if (prevDist > 0) {
             const zoom = this.cameras.main.zoom * (curDist / prevDist)
-            this.cameras.main.zoom = Phaser.Math.Clamp(zoom, 0.5, 1.5)
+            this.cameras.main.zoom = Phaser.Math.Clamp(zoom, this.minZoom, 1.5)
         }
         return  // pinch ativo — ignora drag
     }
@@ -86,6 +87,13 @@ this.input.on('pointermove', (pointer) => {
         this.cameras.main.scrollX -= (pointer.x - pointer.prevPosition.x)
         this.cameras.main.scrollY -= (pointer.y - pointer.prevPosition.y)
     }
+})
+
+this.scale.on('resize', (gameSize) => {
+    const minZoomX = gameSize.width  / this.map.widthInPixels;
+    const minZoomY = gameSize.height / this.map.heightInPixels;
+    this.minZoom   = Math.max(minZoomX, minZoomY);
+    this.cameras.main.zoom = Math.max(this.cameras.main.zoom, this.minZoom);
 })
     this._onSelectBuild = (e) => { this.selectedBuilding = e.detail.tipo }
     this._onCancelBuild = ()  => { this.selectedBuilding = null }
@@ -117,7 +125,7 @@ this.input.on('pointermove', (pointer) => {
             sprite.setTint(0xff8888)  // vermelho = inimigo
         }
 
-        sprite.on('pointerdown', () => {
+        sprite.on('pointerdown', pointer => {
             this._lastButtonDown = pointer.button
     if (this.isDragging) return
     window.dispatchEvent(new CustomEvent('game:build-selected', {

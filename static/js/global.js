@@ -5,6 +5,7 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundColor: '#1a1a2e',
+    pixelArt: true, 
     scene: [Game]
 }
 new Phaser.Game(config); 

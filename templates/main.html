@@ -2,16 +2,22 @@
 
 {%block head_extra%}
 <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{url_for('static', filename='js/UX.js')}}" defer></script>
 {%endblock%}
 
 {%block content%}
-<div id="app">
-    <!--
-    <div class="relative w-full h-screen">
-     para adicionar a um componente: 
-    <button class="fixed top-12 left-12 text-black" @click="iniciarJogo()">Jogar</button>
-    <button id="expedicao" class="fixed bottom-12 right-6">Expedição</button> 
-    </div>
+
+<div id="app" class="relative w-full h-screen overflow-hidden">
+
+    <div id="canvas" class="absolute inset-0 z-0"></div>
+<!--
+    <div class="absolute inset-0 z-10 pointer-events-none">
+    <div class="container">
+    <button id="jogar" class="fixed top-12 left-12 text-black pointer-events-auto">Iniciar Jogo</button>
+  </div>
+    <button id="expedicao" class="fixed bottom-12 right-6 pointer-events-auto">Expedição</button> 
+    </div>  
 -->
+
 </div>
 {%endblock%}

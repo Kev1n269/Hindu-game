@@ -1,11 +1,20 @@
 import Game from './scenes.js'
 
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: '#1a1a2e',
-    pixelArt: true, 
-    scene: [Game]
+export function startGame({ playerId, buildings, socket }) {
+    new Phaser.Game({
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundColor: '#1a1a2e',
+        pixelArt: true,
+        parent: 'canvas',
+        scene: [Game],
+        callbacks: {
+            preBoot: (game) => {
+                game.registry.set('playerId', playerId);
+                game.registry.set('buildings', buildings);
+                game.registry.set('socket', socket);
+            }
+        }
+    });
 }
-new Phaser.Game(config); 

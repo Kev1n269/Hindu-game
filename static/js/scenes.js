@@ -18,7 +18,6 @@ export default class Game extends Phaser.Scene {
 
     create(data) {
     this.playerId = data?.playerId ?? 0;
-
     this.map = this.make.tilemap({ key: 'map' });
     const tilesetWater = this.map.addTilesetImage('water', 'water');
     const treeset = this.map.addTilesetImage('treeset', 'treeset');
@@ -28,7 +27,27 @@ export default class Game extends Phaser.Scene {
     this.floorLayer.setDepth(0);
     this.decorationLayer.setDepth(1);
     this.decorationLayer.setCollisionByExclusion([-1]);
+    const socket   = this.registry.get('socket');
+    const buildings = this.registry.get('buildings');
+    this.updateBuildings(buildings);
 
+// escuta novos buildings
+window.addEventListener('game:new-building', (e) => {
+    this.makeBuilding(e.detail);
+});
+
+// ao clicar no tile, emite build para o servidor
+this.input.on('pointerup', (pointer) => {
+    if (this.isDragging || !this.selectedBuilding) return;
+    const tx = this.map.worldToTileX(pointer.worldX);
+    const ty = this.map.worldToTileY(pointer.worldY);
+    socket.emit('build', {
+        id: this.registry.get('playerId'),
+        type: this.selectedBuilding,
+        tx, ty
+    });
+    this.selectedBuilding = null;
+});
     this.buildingSprites  = {}
     this.selectedBuilding = null
     this.isDragging       = false
@@ -95,6 +114,12 @@ this.scale.on('resize', (gameSize) => {
     this.minZoom   = Math.max(minZoomX, minZoomY);
     this.cameras.main.zoom = Math.max(this.cameras.main.zoom, this.minZoom);
 })
+
+this.buildMode     = false
+this.hoverTile     = { tx: -1, ty: -1 }
+this.gridGraphics  = this.add.graphics().setDepth(9)
+this.hoverGraphics = this.add.graphics().setDepth(10)
+
     this._onSelectBuild = (e) => { this.selectedBuilding = e.detail.tipo }
     this._onCancelBuild = ()  => { this.selectedBuilding = null }
     window.addEventListener('game:select-build',  this._onSelectBuild)

@@ -8,6 +8,7 @@ const app = createApp({
       function iniciarJogo() {
   alert("Jogo iniciado");
 }
+
 onMounted(()=>{
 
 /*document.getElementById("expedicao").addEventListener("click", function() {
